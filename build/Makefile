@@ -15,10 +15,10 @@ FLAGS   = #-I.. -Wall -W -ansi -pedantic -lm -Dcimg_use_vt100
        #   -I/usr/X11R6/include -Dcimg_use_xshm -Dcimg_use_xrandr 
 
 CCFLAGS = -framework GLUT -framework OpenGL
+CCFLAGS = -lglut -lGL -lGLU
 
 main:   main.o $(OBJECTS) $(HEADERS)
 	$(CC) main.o $(OBJECTS) $(CCFLAGS) -o main $(FLAGS)
-# 	$(CC) main.o $(OBJECTS) -lglut -lGL -lGLU -o main $(FLAGS)
 
 .cpp.o: 
 	$(CC) -g -c $<
