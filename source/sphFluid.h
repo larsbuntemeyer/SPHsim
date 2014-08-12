@@ -17,7 +17,6 @@ class sphFluid: public particleSystem{
 public:
     sphFluid();
     sphFluid(int n);
-    void advanceFluid(float timeStep);
 private:
     float k;			   // Far pressure weight
     float k_near;							// Near pressure weight
@@ -27,7 +26,6 @@ private:
     void updateDensity();
     void updatePressure();
     void updateViscosity();
-    float dt;
 };
 
 

@@ -22,18 +22,25 @@ particleSystem::particleSystem(int n){
 }
 
 void particleSystem::init(){
-    spacing = 2.f;
+    spacing = 4.f;
+    simW = 50.f;
+    bottom = 0.f;
+    lifetime = 2000.0;
+    killParticles = true;
     particleSize = spacing;
     globalForce = Vec2(0.0,0.0);
     for (int i=0; i<numberOfParticles; i++) {
         particle p;
+        p.lifetime = lifetime;
         particles.push_back(p);
     }
 }
 
-void particleSystem::addParticle(float x, float y){
+void particleSystem::addParticle(Vec2 x){
     particle p;
-    p.pos = Vec2(x,y);
+    p.pos = x;
+    p.lifetime = lifetime;
+    p.vel = Vec2(randab(-0.1,0.1),randab(-0.1,0.1));
     particles.push_back(p);
     numberOfParticles=particles.size();
 }
@@ -43,9 +50,8 @@ int particleSystem::getSize(){
 }
 
 void particleSystem::addGlobalForce(Vec2 f){
-    for (int i=0; i<numberOfParticles; i++) {
-        particles[i].force += f;
-    }
+    printf("Setting Global Force: %f, %f\n",f.x,f.y);
+    globalForce = f;
 }
 
 void particleSystem::eraseParticle(int i){
@@ -53,8 +59,12 @@ void particleSystem::eraseParticle(int i){
     numberOfParticles=particles.size();
 }
 
+void particleSystem::setWorldSize(float x, float y){
+    simW = x;
+}
+
 void particleSystem::draw(){
-	// Draw Fluid Particles
+	// Draw Particles
 	glPointSize(particleSize*2);
 	glBegin(GL_POINTS);
 	for(int i=0; i < particles.size(); ++i)
@@ -63,13 +73,67 @@ void particleSystem::draw(){
 			// ... pressure for the blue component
 			// ... x-velocity for the red component
 			// ... y-velocity for the green-component
-        float c = .1 * particles[i].rho;
-        float p = log(particles[i].press);
-        float x = 20 * fabs(particles[i].vel.x);
-        float y = 20 * fabs(particles[i].vel.y);
+        float x = 1.f-particles[i].lifetime / lifetime;
 
-		glColor3f(.3+x,.3+y,.3+c);
+		glColor3f(x,x,x);
 		glVertex2f(particles[i].pos.x, particles[i].pos.y);
 	}	
 	glEnd();
+}
+
+void particleSystem::advance(float timestep){
+   
+    dt = timestep;
+	// For each particles i ...
+	#pragma omp parallel for
+	for(int i=0; i < particles.size(); ++i)
+	{
+		// Normal verlet stuff
+		particles[i].pos_old = particles[i].pos;
+		particles[i].pos += particles[i].vel * dt;
+
+		// Apply the currently accumulated forces
+		particles[i].pos += particles[i].force * dt * dt;
+
+		// Restart the forces with gravity only. We'll add the rest later.
+		particles[i].force = globalForce;
+
+		// Calculate the velocity for later.
+		particles[i].vel = (particles[i].pos - particles[i].pos_old)/dt;
+
+		// If the velocity is really high, we're going to cheat and cap it.
+		// This will not damp all motion. It's not physically-based at all. Just
+		// a little bit of a hack.
+		float max_vel = 2.f;
+		float vel_mag = particles[i].vel.len2();
+		// If the velocity is greater than the max velocity, then cut it in half.
+		if(vel_mag > max_vel*max_vel)
+			particles[i].vel = particles[i].vel * .5f;
+
+		// If the particle is outside the bounds of the world, then
+		// Make a little spring force to push it back in.
+		if(particles[i].pos.x < -simW) particles[i].force.x -= (particles[i].pos.x - -simW) / 8;
+		if(particles[i].pos.x >  simW) particles[i].force.x -= (particles[i].pos.x - simW) / 8;
+		if(particles[i].pos.y < bottom) particles[i].force.y -= (particles[i].pos.y - bottom) / 8;
+		if(particles[i].pos.y > simW*2) particles[i].force.y -= (particles[i].pos.y - simW*2) / 8;
+
+		// Handle the mouse attractor. 
+		// It's a simple spring based attraction to where the mouse is.
+       // float attr_dist2 = (particles[i].pos - attractor).len2();
+       //const float attr_l = simW/4;
+       //if( attracting )
+       //      if( attr_dist2 < attr_l*attr_l )
+       //        particles[i].force -= (particles[i].pos - attractor) / 256;
+	
+		// Reset the nessecary items.
+		particles[i].rho = particles[i].rho_near = 0;
+		particles[i].neighbors.clear();
+	}
+    if (killParticles) {
+       for (int i = particles.size()-1; i >= 0; i--)
+        {
+           particles[i].lifetime -= dt;
+           if (particles[i].lifetime < 0.0) eraseParticle(i);
+       }
+    }
 }

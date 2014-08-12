@@ -28,7 +28,8 @@ struct neighbor { int i, j; float q, q2; };
 // The particle structure holding all of the relevant information.
 struct particle { 
 	Vec2 pos, pos_old, vel, force; 
-	float mass, rho, rho_near, press, press_near, sigma, beta; 
+	float mass, rho, rho_near, press, press_near, sigma, beta;
+	float lifetime;
 	vector<neighbor> neighbors;  
 };
 
@@ -41,14 +42,22 @@ protected:
     vector<particle> particles;
     void init();
     float spacing;   //spacing of particles
+    float bottom;   //spacing of particles
     Vec2 globalForce;
+    float simW;
+    float dt;
+    float lifetime;
+    bool killParticles;
+    void eraseParticle(int i);
 public:
     particleSystem();
     particleSystem(int n);
     int getSize();
-    void eraseParticle(int i);
-    void addParticle(float x, float y);
+    void addParticle(Vec2 x);
+    void setLifetime(float t){lifetime=t;};
+    void setWorldSize(float x, float y);
     void addGlobalForce(Vec2 f);
+    void advance(float timestep);
     void draw();
 };
 

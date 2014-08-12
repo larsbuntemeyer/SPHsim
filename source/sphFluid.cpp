@@ -91,10 +91,3 @@ void sphFluid::updatePressure(){
 void sphFluid::updateViscosity(){
     
 }
-
-void sphFluid::advanceFluid(float timeStep){
-    dt = timeStep;
-    updateDensity();
-    updatePressure();
-    updateViscosity();
-}

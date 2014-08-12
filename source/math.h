@@ -31,6 +31,10 @@ struct Vec2 {
     };
     //Vec2 operator*(float b, const Vec2& a) { return Vec2(a.x * b, a.y * b); }
     
-
+// Between [0,1]
+    float rand01();
+// Between [a,b]
+    float randab(float a, float b);
+    
 #endif
 
