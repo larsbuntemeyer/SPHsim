@@ -29,7 +29,7 @@ struct Vec2 {
     float len() const { return sqrt(len2()); }
     Vec2 normal() const { return *this / len(); }
     };
-    Vec2 operator*(float b, const Vec2& a) { return Vec2(a.x * b, a.y * b); }
+    //Vec2 operator*(float b, const Vec2& a) { return Vec2(a.x * b, a.y * b); }
     
 
 #endif

@@ -7,21 +7,28 @@ vpath %.cpp ../source
 vpath %.h ../source
 #VPATH = ../source
 
-OBJECTS = particleSystem.o
+EXE = main
+
+OBJECTS = particleSystem.o sphFluid.o
 HEADERS = openGL.h parameters.h math.h
 
 FLAGS   = #-I.. -Wall -W -ansi -pedantic -lm -Dcimg_use_vt100
        #   -L/usr/X11R6/lib -lpthread -lX11 -lXext -lXrandr \
        #   -I/usr/X11R6/include -Dcimg_use_xshm -Dcimg_use_xrandr 
 
-CCFLAGS = -framework GLUT -framework OpenGL
+CCFLAGS = -g -c -O3
+LCFLAGS = -framework GLUT -framework OpenGL
 
-main:   main.o $(OBJECTS) $(HEADERS)
-	$(CC) main.o $(OBJECTS) $(CCFLAGS) -o main $(FLAGS)
+main:   main.o $(OBJECTS)
+	$(CC) main.o $(OBJECTS) $(LCFLAGS) -o $(EXE)
 # 	$(CC) main.o $(OBJECTS) -lglut -lGL -lGLU -o main $(FLAGS)
 
-.cpp.o: 
-	$(CC) -g -c $<
+sphFluid.o: particleSystem.o sphFluid.h
+
+main.o: openGL.h
+
+.cpp.o:
+	$(CC) $(CCFLAGS) $<
 
 clean:
-	rm $(OBJECTS) main main.o
+	rm $(OBJECTS) $(EXE) $(EXE).o

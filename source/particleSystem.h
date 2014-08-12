@@ -13,6 +13,12 @@
 
 #include "math.h"
 
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
 using namespace std;
 
 //////////////////////////////////////////
@@ -24,6 +30,26 @@ struct particle {
 	Vec2 pos, pos_old, vel, force; 
 	float mass, rho, rho_near, press, press_near, sigma, beta; 
 	vector<neighbor> neighbors;  
+};
+
+
+class particleSystem{
+protected:
+    int numberOfParticles;
+    int sizeX, sizeY;
+    float particleSize;
+    vector<particle> particles;
+    void init();
+    float spacing;   //spacing of particles
+    Vec2 globalForce;
+public:
+    particleSystem();
+    particleSystem(int n);
+    int getSize();
+    void eraseParticle(int i);
+    void addParticle(float x, float y);
+    void addGlobalForce(Vec2 f);
+    void draw();
 };
 
 #endif /* defined(__SPHsim__particleSystem__) */

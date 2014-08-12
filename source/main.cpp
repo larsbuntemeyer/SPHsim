@@ -15,6 +15,8 @@ using namespace std;
 
 #include "parameters.h"
 #include "openGL.h"
+#include "particleSystem.h"
+#include "sphFluid.h"
 
 
 int main(int argc, char **argv)
@@ -23,6 +25,9 @@ int main(int argc, char **argv)
    cout << "starting...\n";
 
    initGL(argc, argv);
+   
+   particleSystem pSystem(1000);
+   sphFluid fluid(1000);
     
    glutMainLoop();
 	

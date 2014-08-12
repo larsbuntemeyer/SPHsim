@@ -51,18 +51,18 @@ struct particle {
 }; 
 //////////////////////////////////////////
 int window_w=512, window_h=512;				// Initial Size of the Window
-int N = 2000;										// Number of Particles in the simulation
+int N = 5000;										// Number of Particles in the simulation
 
 float G = .02f * .25;						// Gravitational Constant for our simulation
 
-float spacing = 2.f;							// Spacing of particles
+float spacing = 1.f;							// Spacing of particles
 float k = spacing / 1000.0;			   // Far pressure weight
 float k_near = k*10;							// Near pressure weight
 float rest_density = 3;						// Rest Density
 float r=spacing*1.25;						// Radius of Support
 float rsq=r*r;									// ... squared for performance stuff
 
-float SIM_W=50;								// The size of the world
+float SIM_W=75;								// The size of the world
 float bottom = 0;								// The floor of the world
 
 // Our collection of particles
