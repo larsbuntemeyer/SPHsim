@@ -22,7 +22,7 @@ particleSystem::particleSystem(int n){
 }
 
 void particleSystem::init(){
-    spacing = 4.f;
+    spacing = 2.f;
     simW = 50.f;
     bottom = 0.f;
     lifetime = 2000.0;

@@ -33,6 +33,9 @@ struct particle {
 	vector<neighbor> neighbors;  
 };
 
+enum type {
+    basic,sphFluid
+    };
 
 class particleSystem{
 protected:
@@ -58,6 +61,7 @@ public:
     void setWorldSize(float x, float y);
     void addGlobalForce(Vec2 f);
     void advance(float timestep);
+    vector<particle> getParticles(){return particles;};
     void draw();
 };
 

@@ -3,6 +3,11 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <fstream>
+#include <cstring>
+#include <string>
+#include <sstream>
+#include <stdexcept>
 #include <cmath>
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -10,9 +15,9 @@
 #include <GL/glut.h>
 #endif
 #include <omp.h>
+#include "CImg.h"
 
 using namespace std;
-
 
 #include "parameters.h"
 #include "openGL.h"
@@ -20,13 +25,22 @@ using namespace std;
 #include "sphFluid.h"
 #include "math.h"
 
+
+Vec2 mousePosition;
+particleSystem pSystem;
+int nStep = 0;
+int iFile = 0;
+
 // Between [0,1]
 float rand01() { return (float)rand() * (1.f / RAND_MAX); }
 // Between [a,b]
 float randab(float a, float b) { return a + (b-a)*rand01(); }
 
-Vec2 mousePosition;
-particleSystem pSystem;
+string stringify(double x) {
+    std::ostringstream o;
+   o << x;
+   return o.str();
+} 
 
 void render()
 {
@@ -48,11 +62,11 @@ void motion(int x, int y)
     static int oldX;
     static int oldY;
     if(notInit) {
-        printf("MOTION: (%d,%d) -> (%d,%d)\n", oldX, oldY, x, y);
+       // printf("MOTION: (%d,%d) -> (%d,%d)\n", oldX, oldY, x, y);
         oldX = x;
         oldY = y;
     } else {
-        printf("MOTION: (%d,%d)\n", x, y);
+       // printf("MOTION: (%d,%d)\n", x, y);
         oldX = x;
         oldY = y;
         notInit = 1;
@@ -118,12 +132,6 @@ void mouse(int button,int state,int x,int y)
     } /* end if/else */
 }
 //
-void idle()
-{
-    pSystem.advance(1.0);
-    render();
-}
-
 void menuCall(int value) {
     printf("MENU: %d\n", value);
     if       (value == 20) {
@@ -159,6 +167,39 @@ void buildMenu() {
     
 } /* end func buildMenu */
 
+
+void renderParticles(){
+    string file = filename + stringify(iFile) + ".png";
+    cimg_library::CImg<unsigned char>image(window_h,window_h,1,3);
+    image.fill(255);
+    float relX = (float)window_h/worldSize;
+    float relY = (float)window_h/worldSize;
+    printf("-------------------------------------------------\n");
+    printf("starting rendering...\n");
+    char *name = new char[file.length()+1];
+    vector<particle> particles = pSystem.getParticles();
+    for (int i=0; i<(int)particles.size(); i++) {
+        int x = (int)relX*particles[i].pos.x;
+        int y = (int)relY*particles[i].pos.y;
+        image.draw_circle(x,y,2.0,"white",1.0);
+    }
+    strcpy(name, file.c_str());
+    image.save(name);
+    printf("finished rendering to file %s \n",name);
+    //image.display();
+    iFile++;
+}
+
+void idle()
+{
+    pSystem.advance(timestep);
+    if (nStep%plotIntervall==0) {
+      renderParticles();
+    }
+    render();
+    nStep++;
+}
+
 void initGL(int argc, char **argv){
     //   glClearColor (0.0, 0.0, 0.0, 0.0);
     //   glMatrixMode(GL_MODELVIEW);
@@ -191,10 +232,9 @@ int main(int argc, char **argv)
 {
 
    initGL(argc, argv);
-   
+  
    pSystem.setWorldSize(worldSize,worldSize);
    pSystem.addGlobalForce(Vec2(0,-G));
-    
    glutMainLoop();
 	
 }
