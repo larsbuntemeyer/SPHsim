@@ -10,7 +10,6 @@
 
 particleSystem::particleSystem(){
     printf("Creating empty Particle System\n");
-    numberOfParticles = 0;
     init();
 }
 
@@ -24,15 +23,57 @@ particleSystem::particleSystem(int n){
 void particleSystem::init(){
     spacing = 2.f;
     simW = 50.f;
-    bottom = 0.f;
+    bottom = 0.0;
     lifetime = 2000.0;
-    killParticles = true;
+    kill = false;
+    particleType = basic;
+    setup = chaos;
     particleSize = spacing;
     globalForce = Vec2(0.0,0.0);
-    for (int i=0; i<numberOfParticles; i++) {
-        particle p;
-        p.lifetime = lifetime;
-        particles.push_back(p);
+    setupParticles();
+}
+
+void particleSystem::setupParticles(){
+    float wx;
+    float wy;
+    switch (setup) {
+        case empty:
+            break;
+        case cube:
+            wx = simW/4.f;
+            wy = simW;
+            for (float y=bottom+1; y<wy; y+=spacing) {
+            for (float x=-wx; x<wx; x+=spacing) {
+                if (particles.size()>numberOfParticles) break;
+                particle p;
+                p.pos.x = x;
+                p.pos.y = y;
+                particles.push_back(p);
+            }
+            }
+            break;
+        case chaos:
+            wx = simW/4.f;
+            wy = simW;
+            for (float y=bottom; y<simW; y+=spacing) {
+            for (float x=-wx; x<wx; x+=spacing) {
+                if (particles.size()>numberOfParticles) break;
+                particle p;
+                p.pos.x = x;
+                p.pos.y = y;
+                p.vel = Vec2(randab(-0.1,0.1),randab(-0.1,0.1));
+                particles.push_back(p);
+            }
+            }
+            break;
+        case dambreak:
+            break;
+            
+        default:
+            break;
+    }
+    for (int i=0; i<particles.size(); i++) {
+        particles[i].lifetime = lifetime;
     }
 }
 
@@ -42,12 +83,8 @@ void particleSystem::addParticle(Vec2 x){
     p.lifetime = lifetime;
     p.vel = Vec2(randab(-0.1,0.1),randab(-0.1,0.1));
     particles.push_back(p);
-    numberOfParticles=particles.size();
 }
 
-int particleSystem::getSize(){
-    return numberOfParticles;
-}
 
 void particleSystem::addGlobalForce(Vec2 f){
     printf("Setting Global Force: %f, %f\n",f.x,f.y);
@@ -56,11 +93,6 @@ void particleSystem::addGlobalForce(Vec2 f){
 
 void particleSystem::eraseParticle(int i){
     particles.erase(particles.begin()+i);
-    numberOfParticles=particles.size();
-}
-
-void particleSystem::setWorldSize(float x, float y){
-    simW = x;
 }
 
 void particleSystem::draw(){
@@ -129,7 +161,7 @@ void particleSystem::advance(float timestep){
 		particles[i].rho = particles[i].rho_near = 0;
 		particles[i].neighbors.clear();
 	}
-    if (killParticles) {
+    if (kill) {
        for (int i = particles.size()-1; i >= 0; i--)
         {
            particles[i].lifetime -= dt;

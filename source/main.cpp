@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 #include <cmath>
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -27,7 +28,7 @@ using namespace std;
 
 
 Vec2 mousePosition;
-particleSystem pSystem;
+particleSystem pSystem(1000);
 int nStep = 0;
 int iFile = 0;
 
@@ -36,10 +37,10 @@ float rand01() { return (float)rand() * (1.f / RAND_MAX); }
 // Between [a,b]
 float randab(float a, float b) { return a + (b-a)*rand01(); }
 
-string stringify(double x) {
+string stringify(int x) {
     std::ostringstream o;
-   o << x;
-   return o.str();
+    o << setfill('0') << setw(4) << x;
+    return o.str();
 } 
 
 void render()
@@ -170,18 +171,27 @@ void buildMenu() {
 
 void renderParticles(){
     string file = filename + stringify(iFile) + ".png";
-    cimg_library::CImg<unsigned char>image(window_h,window_h,1,3);
+    cimg_library::CImg<unsigned char>image(window_w,window_h,1,3);
     image.fill(255);
-    float relX = (float)window_h/worldSize;
-    float relY = (float)window_h/worldSize;
     printf("-------------------------------------------------\n");
     printf("starting rendering...\n");
     char *name = new char[file.length()+1];
     vector<particle> particles = pSystem.getParticles();
+    float r = pSystem.getSpacing();
     for (int i=0; i<(int)particles.size(); i++) {
-        int x = (int)relX*particles[i].pos.x;
-        int y = (int)relY*particles[i].pos.y;
-        image.draw_circle(x,y,2.0,"white",1.0);
+        float x = particles[i].pos.x;
+        float y = particles[i].pos.y;
+        float relX = (float)(0.5*(x- (-worldSize))/worldSize);
+        float relY = (float)(0.5*(y-bottom)/worldSize);
+        int pixelX;
+        int pixelY;
+        pixelX = static_cast<int>(relX * window_w);
+        pixelY = window_h - static_cast<int>(relY * window_h);
+       // printf("mapping particle pos %f, %f \n",x,y);
+       // printf("to pixel pos %i, %i \n",pixelX,pixelY);
+       // printf("relX,relY, %f, %f \n",relX,relY);
+       // printf("test %i \n",int(0.528750*580));
+        image.draw_circle(pixelX,pixelY,2.0*r,particleColor,1.0);
     }
     strcpy(name, file.c_str());
     image.save(name);
@@ -194,7 +204,7 @@ void idle()
 {
     pSystem.advance(timestep);
     if (nStep%plotIntervall==0) {
-      renderParticles();
+     renderParticles();
     }
     render();
     nStep++;
@@ -210,7 +220,7 @@ void initGL(int argc, char **argv){
     glutInitWindowSize(window_w, window_h);
     
     // glutCreateWindow("SPH");
-    mainWindow = glutCreateWindow("SPH");
+    mainWindow = glutCreateWindow("Particle Sandbox");
     
     glutDisplayFunc(render);
     glutKeyboardFunc(keyboard);
@@ -231,10 +241,16 @@ void initGL(int argc, char **argv){
 int main(int argc, char **argv)
 {
 
-   initGL(argc, argv);
+    initGL(argc, argv);
   
-   pSystem.setWorldSize(worldSize,worldSize);
-   pSystem.addGlobalForce(Vec2(0,-G));
-   glutMainLoop();
+    pSystem.setNumberOfParticles(numberOfParticles);
+    pSystem.setWorldSize(worldSize);
+    pSystem.setBottom(bottom);
+    pSystem.addGlobalForce(Vec2(0,-G));
+    pSystem.setLifetime(lifetime);
+    pSystem.killParticles(kill);
+    pSystem.setSetup(setup);
+
+    glutMainLoop();
 	
 }

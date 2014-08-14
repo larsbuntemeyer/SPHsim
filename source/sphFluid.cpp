@@ -9,12 +9,13 @@
 #include "sphFluid.h"
 
 sphFluid::sphFluid(){
-   printf("Creating empty Fluid\n");
-   k = spacing / 1000.0;			   // Far pressure weight
-   k_near = k*10;							// Near pressure weight
-   rest_density = 3;						// Rest Density
-   r=spacing*1.25;						// Radius of Support
-   rsq=r*r;									// ... squared for performance stuff
+    printf("Creating empty Fluid\n");
+    k = spacing / 1000.0;			   // Far pressure weight
+    k_near = k*10;							// Near pressure weight
+    rest_density = 3;						// Rest Density
+    r=spacing*1.25;						// Radius of Support
+    rsq=r*r;									// ... squared for performance stuff
+    particleType = sph;
 }
 
 sphFluid::sphFluid(int n): particleSystem(n){
@@ -37,7 +38,7 @@ void sphFluid::updateDensity(){
 
 	// For each particle ...
 	#pragma omp parallel for
-	for(int i=0; i < numberOfParticles; ++i)
+	for(int i=0; i < particles.size(); ++i)
 	{
 		particles[i].rho = particles[i].rho_near = 0;
 
@@ -45,7 +46,7 @@ void sphFluid::updateDensity(){
 		float d=0, dn=0;
 
 		// Now look at every other particle
-		for(int j = i + 1; j < numberOfParticles; ++j)
+		for(int j = i + 1; j < particles.size(); ++j)
 		{
 			// The vector seperating the two particles
 			Vec2 rij = particles[j].pos - particles[i].pos;

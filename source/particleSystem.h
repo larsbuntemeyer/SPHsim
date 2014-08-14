@@ -33,9 +33,16 @@ struct particle {
 	vector<neighbor> neighbors;  
 };
 
-enum type {
-    basic,sphFluid
-    };
+
+enum _particleType {
+   basic,sph
+};
+enum _setup {
+   empty,
+   cube,
+   chaos,
+   dambreak
+};
 
 class particleSystem{
 protected:
@@ -45,24 +52,34 @@ protected:
     vector<particle> particles;
     void init();
     float spacing;   //spacing of particles
-    float bottom;   //spacing of particles
     Vec2 globalForce;
     float simW;
+    float bottom;
     float dt;
     float lifetime;
-    bool killParticles;
+    _particleType particleType;
+    bool kill;
     void eraseParticle(int i);
+    _setup setup;
+    void setupParticles();
 public:
     particleSystem();
     particleSystem(int n);
-    int getSize();
     void addParticle(Vec2 x);
-    void setLifetime(float t){lifetime=t;};
-    void setWorldSize(float x, float y);
+    void setNumberOfParticles(int x){numberOfParticles=x;};
+    void setBottom(float b){bottom=b;};
     void addGlobalForce(Vec2 f);
     void advance(float timestep);
     vector<particle> getParticles(){return particles;};
     void draw();
+    float getSpacing(){return spacing;};
+    void setLifetime(float t){lifetime=t;};
+    void setWorldSize(float x){simW=x;};
+    void setSetup(_setup s){setup=s;};
+    void setType(_particleType p){particleType=p;};
+    void killParticles(bool k){kill=k;};
+    int getType(){return particleType;};
+    int getSize(){return particles.size();};
 };
 
 #endif /* defined(__SPHsim__particleSystem__) */
