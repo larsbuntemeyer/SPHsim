@@ -21,33 +21,98 @@ particleSystem::particleSystem(int n){
 }
 
 void particleSystem::init(){
-    spacing = 2.f;
-    simW = 50.f;
+    printf("Initiating Particles... ");
+    spacing = 1.f;
+    simW = 100.f;
     bottom = 0.0;
-    lifetime = 2000.0;
+    lifetime = 1000.0;
     kill = false;
     particleType = basic;
-    setup = chaos;
+    setup = cube;
     particleSize = spacing;
     globalForce = Vec2(0.0,0.0);
-    setupParticles();
+    setupParticles(setup,1);
+    printf("done\n");
 }
 
-void particleSystem::setupParticles(){
+void particleSystem::setupParticles(_setup s, bool init){
     float wx;
     float wy;
-    switch (setup) {
+    float xpos;
+    float ypos;
+    float radius;
+    
+    // clear particles
+    if(init) particles.clear();
+    
+    switch (s) {
         case empty:
             break;
-        case cube:
+        case column:
             wx = simW/4.f;
             wy = simW;
-            for (float y=bottom+1; y<wy; y+=spacing) {
-            for (float x=-wx; x<wx; x+=spacing) {
+            printf("Setup: Column with %f, %f \n",wx,wy);
+            for (float y=bottom+1; y<2*simW; y+=0.5*spacing) {
+            for (float x=-wx; x<wx; x+=0.5*spacing) {
+                if (particles.size()>=numberOfParticles) break;
+                particle p;
+                p.pos.x = x;
+                p.pos.y = y;
+         		p.pos_old = p.pos + Vec2(rand01(), rand01()) * 0.001f;
+	        	p.force = Vec2(0,0);
+                particles.push_back(p);
+            }
+            }
+            break;
+        case dambreak:
+            wx = simW/2;
+            wy = simW;
+            printf("Setup: Dam with %f, %f \n",wx,wy);
+            for (float y=bottom+1; y<2*simW; y+=0.5*spacing) {
+            for (float x=-simW; x<-simW+wx; x+=0.5*spacing) {
+                if (particles.size()>=numberOfParticles) break;
+                particle p;
+                p.pos.x = x;
+                p.pos.y = y;
+         		p.pos_old = p.pos + Vec2(rand01(), rand01()) * 0.001f;
+	        	p.force = Vec2(0,0);
+                particles.push_back(p);
+            }
+            }
+            break;
+        case sphere:
+            wx = simW;
+            wy = simW;
+            xpos=0.0;
+            ypos=simW;
+            radius = simW/4;
+            printf("Setup: Sphere at %f, %f \n",xpos,ypos);
+            for (float y=bottom+1; y<2*simW; y+=.5*spacing) {
+            for (float x=-wx; x<wx; x+=.5*spacing) {
+                if (particles.size()>numberOfParticles) break;
+                if (pow(x-xpos,2)+pow(y-ypos,2)<radius*radius) {
+                particle p;
+                p.pos.x = x;
+                p.pos.y = y;
+	        	p.force = Vec2(0,0);
+                particles.push_back(p);
+                }
+            }
+            }
+            break;
+        case cube:
+            wx = simW/2;
+            wy = simW;
+            xpos=0.0;
+            ypos=simW;
+            printf("Setup: Cube");
+            for (float y=bottom+simW/2; y<1.5*simW; y+=.5*spacing) {
+            for (float x=-simW/2; x<simW/2; x+=.5*spacing) {
                 if (particles.size()>numberOfParticles) break;
                 particle p;
                 p.pos.x = x;
                 p.pos.y = y;
+	        	p.force = Vec2(0,0);
                 particles.push_back(p);
             }
             }
@@ -55,18 +120,15 @@ void particleSystem::setupParticles(){
         case chaos:
             wx = simW/4.f;
             wy = simW;
-            for (float y=bottom; y<simW; y+=spacing) {
+            for (float y=bottom; y<10000; y+=spacing) {
             for (float x=-wx; x<wx; x+=spacing) {
                 if (particles.size()>numberOfParticles) break;
                 particle p;
                 p.pos.x = x;
                 p.pos.y = y;
-                p.vel = Vec2(randab(-0.1,0.1),randab(-0.1,0.1));
                 particles.push_back(p);
             }
             }
-            break;
-        case dambreak:
             break;
             
         default:
@@ -74,7 +136,12 @@ void particleSystem::setupParticles(){
     }
     for (int i=0; i<particles.size(); i++) {
         particles[i].lifetime = lifetime;
+        particles[i].pos_old = particles[i].pos + Vec2(rand01(), rand01()) * 0.001f;
+      	particles[i].sigma = .2f;
+        particles[i].beta = 0.2f;
     }
+    printf("current number of particles: %i\n",particles.size());
+    if(particles.size()>=numberOfParticles) printf("Can not add more particles, current: %i\n",particles.size());
 }
 
 void particleSystem::addParticle(Vec2 x){
@@ -161,6 +228,9 @@ void particleSystem::advance(float timestep){
 		particles[i].rho = particles[i].rho_near = 0;
 		particles[i].neighbors.clear();
 	}
+
+    updateForces();
+
     if (kill) {
        for (int i = particles.size()-1; i >= 0; i--)
         {
@@ -168,4 +238,15 @@ void particleSystem::advance(float timestep){
            if (particles[i].lifetime < 0.0) eraseParticle(i);
        }
     }
+}
+
+void particleSystem::updateForces(){
+    
+}
+
+void particleSystem::printData(){
+    printf("Data of Particle System:\n");
+    printf("spacing: %f\n",spacing);
+    printf("simW: %f\n",simW);
+    printf("maximum number of particles: %i\n",numberOfParticles);
 }

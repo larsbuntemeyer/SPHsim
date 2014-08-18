@@ -40,6 +40,8 @@ enum _particleType {
 enum _setup {
    empty,
    cube,
+   column,
+   sphere,
    chaos,
    dambreak
 };
@@ -61,10 +63,11 @@ protected:
     bool kill;
     void eraseParticle(int i);
     _setup setup;
-    void setupParticles();
+    void updateForces();
 public:
     particleSystem();
     particleSystem(int n);
+    void setupParticles(_setup s, bool init);
     void addParticle(Vec2 x);
     void setNumberOfParticles(int x){numberOfParticles=x;};
     void setBottom(float b){bottom=b;};
@@ -80,6 +83,8 @@ public:
     void killParticles(bool k){kill=k;};
     int getType(){return particleType;};
     int getSize(){return particles.size();};
+    void setSpacing(float x){spacing=x;};
+    void printData();
 };
 
 #endif /* defined(__SPHsim__particleSystem__) */

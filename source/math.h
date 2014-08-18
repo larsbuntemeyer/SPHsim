@@ -28,8 +28,8 @@ struct Vec2 {
     float len2() const { return *this * *this; }
     float len() const { return sqrt(len2()); }
     Vec2 normal() const { return *this / len(); }
-    };
     //Vec2 operator*(float b, const Vec2& a) { return Vec2(a.x * b, a.y * b); }
+    };
     
 // Between [0,1]
     float rand01();

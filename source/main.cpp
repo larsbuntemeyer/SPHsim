@@ -28,9 +28,11 @@ using namespace std;
 
 
 Vec2 mousePosition;
-particleSystem pSystem(1000);
+sphFluid pSystem(numberOfParticles);
 int nStep = 0;
 int iFile = 0;
+bool running = false;
+bool renderFiles = false;
 
 // Between [0,1]
 float rand01() { return (float)rand() * (1.f / RAND_MAX); }
@@ -55,6 +57,24 @@ void render()
 //
 void keyboard(unsigned char c, __attribute__((unused)) int x, __attribute__((unused))  int y)
 {
+	switch(c)
+	{
+		// Quit
+		case 27:
+		case 'q':
+		case 'Q':
+			exit(0);
+			break;
+         case ' ':
+            running = !running;
+			break;
+         case 'r':
+            running = false;
+            pSystem.setupParticles(setup,1);
+            render();
+			break;
+    }
+    
 }
 //
 void motion(int x, int y)
@@ -135,12 +155,45 @@ void mouse(int button,int state,int x,int y)
 //
 void menuCall(int value) {
     printf("MENU: %d\n", value);
-    if       (value == 20) {
-        eangle = 0;
-    } else if(value == 21) {
+    if       (value == 0) {
+        running = false;
+        pSystem.setupParticles(setup,1);
+        render();
     } else if(value == 10) {
-        glutPostRedisplay();
+        running = false;
+        pSystem.setSetup(column);
+        pSystem.setupParticles(column,1);
+        render();
     } else if(value == 11) {
+        running = false;
+        pSystem.setSetup(sphere);
+        pSystem.setupParticles(sphere,1);
+        render();
+    } else if(value == 12) {
+        running = false;
+        pSystem.setSetup(cube);
+        pSystem.setupParticles(cube,1);
+        render();
+    } else if(value == 13) {
+        running = false;
+        pSystem.setSetup(dambreak);
+        pSystem.setupParticles(dambreak,1);
+        render();
+    } else if(value == 20) {
+        pSystem.setupParticles(column,0);
+        render();
+    } else if(value == 21) {
+        pSystem.setupParticles(sphere,0);
+        render();
+    } else if(value == 22) {
+        pSystem.setupParticles(cube,0);
+        render();
+    } else if(value == 23) {
+        pSystem.setupParticles(dambreak,0);
+        render();
+    } else if(value == 3) {
+        renderFiles = !renderFiles;
+    } else if(value == 4) {
         glutDestroyWindow(mainWindow);
         exit(0);
     } else if(value == 0) {
@@ -153,22 +206,29 @@ void buildMenu() {
     int mainMenu;
     
     subMenu1 = glutCreateMenu(menuCall);
-    glutAddMenuEntry("Redraw", 10);
-    glutAddMenuEntry("Quit",   11);
+    glutAddMenuEntry("Column", 10);
+    glutAddMenuEntry("Sphere", 11);
+    glutAddMenuEntry("Cube", 12);
+    glutAddMenuEntry("Dam Break", 13);
     
     subMenu2 = glutCreateMenu(menuCall);
-    glutAddMenuEntry("Reset Angle", 20);
-    glutAddMenuEntry("Reset Size",  21);
+    glutAddMenuEntry("Column", 20);
+    glutAddMenuEntry("Sphere", 21);
+    glutAddMenuEntry("Cube", 22);
+    glutAddMenuEntry("Dam Break", 23);
     
     mainMenu = glutCreateMenu(menuCall);
-    glutAddMenuEntry("Hello", 0);
-    glutAddSubMenu("Reset", subMenu2);
-    glutAddSubMenu("System", subMenu1);
+    glutAddMenuEntry("Reset", 0);
+    glutAddSubMenu("Simulation Setup", subMenu1);
+    glutAddSubMenu("Add Particles", subMenu2);
+    glutAddMenuEntry("Render", 3);
+    glutAddMenuEntry("Quit", 4);
+   // glutAddSubMenu("Reset", subMenu2);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
     
 } /* end func buildMenu */
 
-
+//renders particles to a png file
 void renderParticles(){
     string file = filename + stringify(iFile) + ".png";
     cimg_library::CImg<unsigned char>image(window_w,window_h,1,3);
@@ -177,7 +237,8 @@ void renderParticles(){
     printf("starting rendering...\n");
     char *name = new char[file.length()+1];
     vector<particle> particles = pSystem.getParticles();
-    float r = pSystem.getSpacing();
+    float r = 1.2*pSystem.getSpacing();
+    
     for (int i=0; i<(int)particles.size(); i++) {
         float x = particles[i].pos.x;
         float y = particles[i].pos.y;
@@ -191,8 +252,9 @@ void renderParticles(){
        // printf("to pixel pos %i, %i \n",pixelX,pixelY);
        // printf("relX,relY, %f, %f \n",relX,relY);
        // printf("test %i \n",int(0.528750*580));
-        image.draw_circle(pixelX,pixelY,2.0*r,particleColor,1.0);
+        image.draw_circle(pixelX,pixelY,r,particleColor,1.0);
     }
+    
     strcpy(name, file.c_str());
     image.save(name);
     printf("finished rendering to file %s \n",name);
@@ -202,12 +264,14 @@ void renderParticles(){
 
 void idle()
 {
-    pSystem.advance(timestep);
-    if (nStep%plotIntervall==0) {
-     renderParticles();
+    if (running) {
+       pSystem.advance(timestep);
+       if (renderFiles && nStep%plotIntervall==0) {
+         renderParticles();
+       }
+       nStep++;
     }
     render();
-    nStep++;
 }
 
 void initGL(int argc, char **argv){
@@ -249,7 +313,10 @@ int main(int argc, char **argv)
     pSystem.addGlobalForce(Vec2(0,-G));
     pSystem.setLifetime(lifetime);
     pSystem.killParticles(kill);
+    pSystem.setSpacing(spacing);
     pSystem.setSetup(setup);
+    pSystem.setupParticles(setup,1);
+    pSystem.printData();
 
     glutMainLoop();
 	
