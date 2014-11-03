@@ -16,8 +16,9 @@ FLAGS   = #-I.. -Wall -W -ansi -pedantic -lm -Dcimg_use_vt100
 
 CCFLAGS = -c -g -O3 -fopenmp
 CCFLAGS = -c -O3 -fopenmp -I.. -Wall -W -ansi -pedantic -Dcimg_use_vt100 -I/usr/X11R6/include
-CLFLAGS = -framework GLUT -framework OpenGL -fopenmp -L/usr/X11R6/lib -lpthread -lX11
-#CCFLAGS = -lglut -lGL -lGLU
+#CLFLAGS = -framework GLUT -framework OpenGL -fopenmp -L/usr/X11R6/lib -lpthread -lX11
+CLFLAGS = -lglut -lGL -lGLU -fopenmp -L/usr/X11R6/lib -lpthread -lX11
+
 
 main:   main.o $(OBJECTS) $(HEADERS)
 	$(CC) main.o $(OBJECTS) $(CLFLAGS) -o main $(FLAGS)

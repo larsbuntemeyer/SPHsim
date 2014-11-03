@@ -10,6 +10,7 @@
 #define __SPHsim__particleSystem__
 
 #include <iostream>
+#include <stdio.h>
 
 #include "math.h"
 
